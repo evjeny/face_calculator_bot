@@ -1,0 +1,13 @@
+/start - Begin conversation with bot
+
+/help - Print help for commands
+
+/set - Add new image variable.
+Firstly send variable name and then picture to assign.
+Remember that picture should contain face in the middle of it for correct work.
+
+/eval - Evaluate expression.
+Use variable names or even numbers and mathematical operations, such as + or - to find something new.
+For example, you can upload pictures of man with and without glasses, find their difference and add result to new picture.
+
+/cancel - Cancel adding variable
