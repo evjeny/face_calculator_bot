@@ -1,11 +1,11 @@
+import logging
 import re
 
-from telegram.ext import (Updater, ConversationHandler, CommandHandler, MessageHandler,Filters)
-import logging
+from telegram.ext import (Updater, ConversationHandler, CommandHandler, MessageHandler, Filters)
 
 from bot.utils import (clean_all_files, save_variable, get_variable_names, read_variables, get_image_from_variable,
-                       convert_image_to_io, add_file_to_queue, remove_from_queue, RepeatedTimer, handle_message_edit)
-
+                       convert_image_to_io, add_file_to_queue, remove_from_queue, RepeatedTimer, handle_message_edit,
+                       steps_between_tensors)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -103,6 +103,28 @@ def evaluate_function(update, context):
         context.bot.send_photo(chat_id=chat_id, photo=image_bio)
 
 
+@handle_message_edit
+def from_function(update, context):
+    chat_id = update.message.chat_id
+
+    if len(context.args) != 2 and len(context.args) != 3:
+        context.bot.send_message(chat_id=chat_id, text="You should pass variable names")
+        logger.info("User {} didn't variable names".format(chat_id))
+
+    var_a, var_b = context.args[:2]
+    steps = 10 if len(context.args) == 2 else int(context.args[2])
+
+    variables = read_variables(chat_id, [var_a, var_b])
+    var_a = variables[var_a]
+    var_b = variables[var_b]
+
+    result_tensor = steps_between_tensors(var_a, var_b, steps)
+    for tensor in result_tensor:
+        image = get_image_from_variable(tensor)
+        image_bio = convert_image_to_io(image)
+        context.bot.send_photo(chat_id=chat_id, photo=image_bio)
+
+
 def main(token=None, args=None):
     if not token:
         token = read_token()
@@ -137,6 +159,9 @@ def main(token=None, args=None):
 
     eval_handler = CommandHandler("eval", evaluate_function)
     dispatcher.add_handler(eval_handler)
+
+    from_handler = CommandHandler("from", from_function)
+    dispatcher.add_handler(from_handler)
 
     # periodically clean files from storage
     check_interval = 60 # check files every minute

@@ -7,6 +7,7 @@ from time import time
 
 import torch
 import torchvision.transforms as transforms
+import numpy as np
 from PIL import Image
 from telegram.update import Update
 import logging
@@ -34,7 +35,7 @@ def singleton(class_):
     return wrapper
 
 
-model = singleton(CNNVAEBig)("weights/cnnvae_256px.pt")
+model = singleton(CNNVAEBig)("weights/cnnvae_aug_256px.pt")
 
 
 class RepeatedTimer(object):
@@ -114,16 +115,20 @@ def save_variable_pil(user_id, var_name, var_image):
     var_path = os.path.join(user_path, var_name)
     os.makedirs(user_path, exist_ok=True)
 
+    tensor_result = predict_variable(var_image)
+
+    torch.save(tensor_result, var_path)
+    logger.info("saved variable {} of user {}".format(var_name, user_id))
+
+
+def predict_variable(pil_image):
     transformation = transforms.Compose([
         transforms.Resize((image_size, image_size)),
         transforms.ToTensor()
     ])
 
-    tensor_image = transformation(var_image).view(1, 3, image_size, image_size)
-    tensor_result = model.reparam(*model.encoder(tensor_image))
-
-    torch.save(tensor_result, var_path)
-    logger.info("saved variable {} of user {}".format(var_name, user_id))
+    tensor_image = transformation(pil_image).view(1, 3, image_size, image_size)
+    return model.reparam(*model.encoder(tensor_image))
 
 
 def read_variable(user_id, variable_name):
@@ -178,4 +183,16 @@ def handle_message_edit(handler_function):
                 return
         handler_function(*args, **kwargs)
     return wrapper
+
+
+def steps_between_tensors(var_a: torch.Tensor, var_b: torch.Tensor, steps=10) -> torch.Tensor:
+    size: int = np.prod(var_a.size())
+    var_a = var_a.view(size).detach().numpy()
+    var_b = var_b.view(size).detach().numpy()
+    result = torch.zeros(size, steps)
+
+    for i in range(size):
+        result[i] = torch.linspace(var_a[i], var_b[i], steps)
+    return result.t()
+
 
