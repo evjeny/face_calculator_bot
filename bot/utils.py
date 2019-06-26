@@ -12,7 +12,7 @@ from PIL import Image
 from telegram.update import Update
 import logging
 
-from net.net import CNNVAEBig
+from net.net import CNNVAE
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 storage_path = os.path.join(os.getcwd(), "storage")
 files_queue = []
 
-image_size = 256
-latent_size = 512
+image_size = 64
+latent_size = 256
 
 
 def singleton(class_):
@@ -35,7 +35,7 @@ def singleton(class_):
     return wrapper
 
 
-model = singleton(CNNVAEBig)("weights/cnnvae_aug_256px.pt")
+model = singleton(CNNVAE)("weights/cnnvae_64px.pt")
 
 
 class RepeatedTimer(object):

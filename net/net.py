@@ -5,38 +5,49 @@ from net.utils import Reshaper, DoubleLayer
 
 
 class CNNVAE(nn.Module):
-    def __init__(self, weights=None):
+    def __init__(self, weights=None, bottleneck=256):
         super(CNNVAE, self).__init__()
+
+        self.dim = bottleneck
 
         self.encoder = nn.Sequential(
             Reshaper(3, 64, 64),
-            nn.Conv2d(3, 64, kernel_size=5, stride=2, padding=2),
-            nn.ReLU(),
+            nn.Conv2d(3, 8, kernel_size=1, stride=1, padding=0),
+            nn.LeakyReLU(),
+            nn.Conv2d(8, 16, kernel_size=5, stride=1, padding=2),
+            nn.LeakyReLU(),
+            nn.Conv2d(16, 32, kernel_size=5, stride=1, padding=2),
+            nn.LeakyReLU(),
+            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
             nn.Conv2d(64, 64, kernel_size=5, stride=2, padding=2),
-            nn.ReLU(),
+            nn.LeakyReLU(),
+            nn.Conv2d(64, 64, kernel_size=5, stride=2, padding=2),
+            nn.LeakyReLU(),
             nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             Reshaper(4096),
-            DoubleLayer(4096, 256)
+            DoubleLayer(4096, self.dim)
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(256, 4096),
+            nn.Linear(self.dim, 4096),
+            nn.LeakyReLU(),
             Reshaper(64, 8, 8),
             nn.Upsample(scale_factor=2),
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=5, stride=1, padding=2),
+            nn.LeakyReLU(),
             nn.Upsample(scale_factor=2),
             nn.Conv2d(64, 64, kernel_size=5, stride=1, padding=2),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Upsample(scale_factor=2),
-            nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
+            nn.Conv2d(64, 32, kernel_size=5, stride=1, padding=2),
+            nn.LeakyReLU(),
             nn.Conv2d(32, 16, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Conv2d(16, 8, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(8, 3, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.Conv2d(8, 3, kernel_size=1, stride=1, padding=0),
             nn.Sigmoid()
         )
 

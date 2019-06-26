@@ -10,4 +10,8 @@ Remember that picture should contain face in the middle of it for correct work.
 Use variable names or even numbers and mathematical operations, such as + or - to find something new.
 For example, you can upload pictures of man with and without glasses, find their difference and add result to new picture.
 
+/from - Calculate images between 2 samples.
+Usage: /from image1 image2 steps
+image1 and image2 - your variables (as in /eval function), steps - number of images to generate
+
 /cancel - Cancel adding variable

@@ -10,7 +10,7 @@ class DoubleLayer(nn.Module): # its a trap
         self.var = nn.Linear(in_size, out_size)
 
     def forward(self, input_tensor):
-        return self.mean(input_tensor), self.var(input_tensor)
+        return nn.LeakyReLU()(self.mean(input_tensor)), nn.LeakyReLU()(self.var(input_tensor))
 
 
 class Reshaper(nn.Module):
